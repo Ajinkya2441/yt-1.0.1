@@ -31,6 +31,7 @@ def download_endpoint():
     audio_only = bool(payload.get("audio_only", False))
     resolution = payload.get("resolution")
     filename = payload.get("filename")
+    cookies = payload.get("cookies")
 
     temp_dir = TemporaryDirectory(prefix="yt-download-")
     output_dir = Path(temp_dir.name)
@@ -44,6 +45,7 @@ def download_endpoint():
             resolution=resolution,
             progress_callback=None,
             control=None,
+            cookies=cookies,
         )
     except DownloadError as exc:
         temp_dir.cleanup()

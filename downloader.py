@@ -112,8 +112,11 @@ def download_video(
     resolution: str | None,
     progress_callback: ProgressCallback | None = None,
     control: DownloadControl | None = None,
+    cookies: str | None = None,
 ) -> Path:
-    if audio_only:
+    prefer_ytdlp = audio_only or bool(cookies)
+
+    if prefer_ytdlp:
         try:
             return _download_with_ytdlp(
                 url,
@@ -123,11 +126,13 @@ def download_video(
                 resolution,
                 progress_callback,
                 control,
+                cookies,
             )
         except DownloadCancelled:
             raise
         except Exception as exc:  # pylint: disable=broad-except
-            raise DownloadError(str(exc)) from exc
+            if audio_only or cookies:
+                raise DownloadError(str(exc)) from exc
 
     try:
         return _download_with_pytube(
@@ -152,6 +157,7 @@ def download_video(
                 resolution,
                 progress_callback,
                 control,
+                cookies,
             )
         except DownloadCancelled:
             raise
@@ -215,6 +221,7 @@ def _download_with_ytdlp(
     resolution: str | None,
     progress_callback: ProgressCallback | None,
     control: DownloadControl | None,
+    cookies: str | None,
 ) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -295,6 +302,16 @@ def _download_with_ytdlp(
             "home": str(output_dir),
             "temp": temp_dir,
         }
+
+        if cookies:
+            cookies = cookies.strip()
+            if "\n" in cookies or "\t" in cookies:
+                cookiefile = Path(temp_dir) / "cookies.txt"
+                cookiefile.write_text(cookies, encoding="utf-8")
+                ydl_opts["cookiefile"] = str(cookiefile)
+            else:
+                headers = ydl_opts.setdefault("http_headers", {})
+                headers["Cookie"] = cookies
 
         with YoutubeDL(ydl_opts) as ydl:
             if control:
