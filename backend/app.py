@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import sys
 
 from flask import Flask, abort, after_this_request, jsonify, request, send_file
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
 from downloader import DownloadError, download_video
 
