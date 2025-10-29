@@ -1,0 +1,4 @@
+Flask
+gunicorn
+pytube
+yt-dlp

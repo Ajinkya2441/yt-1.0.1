@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Callable, Protocol
+import shutil
 
 from pytube import YouTube
 from yt_dlp import YoutubeDL
@@ -265,9 +266,14 @@ def _download_with_ytdlp(
         "quiet": False,
         "overwrites": True,
     }
-    
+
     ffmpeg_path = Path(__file__).resolve().parent / "ffmpeg.exe"
-    ydl_opts["ffmpeg_location"] = str(ffmpeg_path)
+    if ffmpeg_path.exists():
+        ydl_opts["ffmpeg_location"] = str(ffmpeg_path)
+    else:
+        fallback_ffmpeg = shutil.which("ffmpeg")
+        if fallback_ffmpeg:
+            ydl_opts["ffmpeg_location"] = fallback_ffmpeg
 
     if merge_output_format:
         ydl_opts["merge_output_format"] = merge_output_format
